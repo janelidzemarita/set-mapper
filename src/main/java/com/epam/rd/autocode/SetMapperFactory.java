@@ -14,20 +14,19 @@ import java.util.Set;
 
 public class SetMapperFactory {
     public SetMapper<Set<Employee>> employeesSetMapper() {
-
         class SetMapperImpl implements SetMapper<Set<Employee>> {
             private static final String HIREDATE = "hiredate";
+
             @Override
             public Set<Employee> mapSet(ResultSet resultSet) {
                 Set<Employee> set = new HashSet<>();
                 try {
                     while (resultSet.next()) {
-                        int currentRow = resultSet.getRow();
-                        set.add(getEmployee(resultSet)); //add Employee to the Set
-                        resultSet.absolute(currentRow);
+                        set.add(getEmployee(resultSet));
+                        resultSet.absolute(resultSet.getRow());
                     }
                 } catch (SQLException e) {
-                    throw new RuntimeException(e);
+                    throw new IllegalArgumentException(e);
                 }
                 return set;
             }
@@ -45,14 +44,19 @@ public class SetMapperFactory {
             private Employee getManager(String managerID, ResultSet resultSet) {
                 if (managerID != null) {
                     try {
-                        resultSet.beforeFirst();
-                        while (resultSet.next()) {
-                            if (managerID.equals(resultSet.getString("ID"))) {
-                                return getEmployee(resultSet); //Manager
-                            }
-                        }
+                        return findManager(managerID, resultSet);
                     } catch (SQLException e) {
-                        throw new RuntimeException(e);
+                        throw new IllegalArgumentException(e);
+                    }
+                }
+                return null;
+            }
+
+            private Employee findManager(String managerID, ResultSet resultSet) throws SQLException {
+                resultSet.beforeFirst();
+                while (resultSet.next()) {
+                    if (managerID.equals(resultSet.getString("ID"))) {
+                        return getEmployee(resultSet);
                     }
                 }
                 return null;
